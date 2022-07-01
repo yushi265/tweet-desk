@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,13 +14,20 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::get('/login', [LoginController::class, 'redirectToProvider'])->name('login');
-Route::get('/login/callback', [LoginController::class, 'handleProviderCallback'])->name('callback');
+Route::middleware('api')
+    ->group(function () {
+        Route::prefix('auth')->group(function () {
+            Route::post('/login', [AuthController::class,'login'])->name('login');
+            Route::middleware('auth:api')->group(function () {
+                Route::post('/logout', [AuthController::class,'logout'])->name('logout');
+                Route::post('/refresh', [AuthController::class,'refresh'])->name('refresh');
+                Route::post('/me', [AuthController::class,'me'])->name('me');
+            });
+        });
 
-Route::get('hello', function () {
-    return response()->json(['hello']);
-});
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+        Route::middleware('auth:api')->group(function () {
+            Route::get('/hello', function () {
+                return response()->json(['hello']);
+            });
+        });
 });
